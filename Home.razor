@@ -1,0 +1,71 @@
+﻿
+
+@page "/"
+@using BlazorDbzPersonagem.Models
+@inject HttpClient Http
+
+<PageTitle>BlazorDragonBall</PageTitle>
+
+<h1>Informações do Personagem</h1>
+
+<div class="form-group mb-3">
+    <label for="idInput">ID do Personagem (ex: 1):</label>
+    <input type="number" class="form-control" id="idInput" @bind="personagemId" placeholder="Digite o ID" />
+</div>
+
+<button class="btn btn-primary mt-2" @onclick="ConsultarPersonagem">Consultar</button>
+
+@if (personagem != null)
+{
+    <div class="mt-4">
+        <p><strong>Nome:</strong> @personagem.Nome</p>
+        <p><strong>Planeta de Origem:</strong> @(personagem.PlanetaOrigem?.Nome ?? "Desconhecido")</p>
+        
+        <p><strong>Transformações:</strong></p>
+        @if (personagem.Transformacoes != null && personagem.Transformacoes.Count > 0)
+        {
+            <ul>
+                @foreach (var t in personagem.Transformacoes)
+                {
+                    <li>@t.Nome</li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p>Nenhuma transformação registada.</p>
+        }
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger mt-4">@errorMessage</div>
+}
+
+@code {
+    private int personagemId = 1;
+    private Personagem? personagem;
+    private string errorMessage = "";
+
+    private async Task ConsultarPersonagem()
+    {
+        errorMessage = string.Empty;
+        personagem = null;
+
+        try
+        {
+            var url = $"https://dragonball-api.com/api/characters/{personagemId}";
+            personagem = await Http.GetFromJsonAsync<Personagem>(url);
+
+            if (personagem == null)
+            {
+                errorMessage = "Personagem não encontrado.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erro ao consultar a API: {ex.Message}";
+        }
+    }
+}
